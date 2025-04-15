@@ -1,0 +1,88 @@
+### Python ###
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+### Docker ###
+# Docker compose override files
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Docker build caches
+**/docker-build.log
+**/.dockerignore
+
+### Database ###
+# ClickHouse data
+**/clickhouse_data/
+*.sqlite
+*.db
+
+### Logs ###
+*.log
+logs/
+
+### OS ###
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+### Grafana ###
+# Local Grafana storage
+grafana/data/
+grafana/plugins/
+
+### Redpanda ###
+redpanda/data/
+
+### Terraform ###
+# For future use
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+### Development ###
+# Local config overrides
+local_settings.*
+*.local.*
+
+# Secrets
+.env
+secrets.ini
+vault.token
+
+### Build artifacts ###
+*.war
+*.jar
+*.ear
+
+### Test artifacts ###
+.pytest_cache/
+.coverage
+htmlcov/
+
+### Visual Studio Code ###
+.history/
+*.code-workspace
