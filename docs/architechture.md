@@ -1,7 +1,7 @@
 # Architecture Real-Time Crypto Analytics
 
 ## System overview
-![Architecture Diagram](diagrams/architecture.png)
+![Architecture Diagram](https://github.com/AIZharau/coinbase-realtime-analytics/blob/main/docs/images/pipeline.png)
 
 ## Current Architecture
 

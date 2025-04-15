@@ -4,22 +4,14 @@
 [![Redpanda](https://img.shields.io/badge/Streaming-Redpanda-ff69b4)](https://redpanda.com/)
 [![Docs](https://img.shields.io/badge/Docs-API%20Reference-blueviolet)](docs/api_reference.md)
 
-![Pipeline Diagram](docs/pipeline.png)  
-*Current architecture overview*
-
 ## Documentation Quick Links
 - [🛠️ Quick Start Guide](docs/quick_start.md) - Get running in 5 minutes
 - [📚 API Reference](docs/api_reference.md) - Producer/consumer interfaces
 - [📊 Dashboard Samples](dashboards/) - Grafana examples
 
 ## Current Architecture
-```mermaid
-graph TD
-    A[Coinbase WS] -->|JSON| B[Python Producer]
-    B --> C[Redpanda]
-    C --> D[ClickHouse Consumer]
-    D --> E[ClickHouse Tables]
-    E --> F[Grafana]
+![Pipeline Diagram](https://github.com/AIZharau/coinbase-realtime-analytics/blob/main/docs/images/pipeline.png)  
+*Current architecture overview*
 
 Lightweight pipeline for processing Coinbase market data with clear upgrade paths.
 
