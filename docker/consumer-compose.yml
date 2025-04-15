@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  consumer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.consumer
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    environment:
+      REDPANDA_BROKERS: "redpanda:9092"
+      CLICKHOUSE_HOST: "clickhouse"
+      CLICKHOUSE_PORT: "9000"
+    volumes:
+      - ../src:/app/src

@@ -1,0 +1,24 @@
+FROM grafana/grafana:10.2.0
+
+USER root
+
+
+RUN apk update && apk add --no-cache unzip
+
+
+RUN mkdir -p /var/lib/grafana/plugins && \
+    mkdir -p /etc/grafana/provisioning/{datasources,dashboards}
+
+
+COPY docker/grafana/clickhouse-plugin.zip /tmp/
+RUN unzip /tmp/clickhouse-plugin.zip -d /var/lib/grafana/plugins/ && \
+    find /var/lib/grafana/plugins -maxdepth 1 -type d -name 'clickhouse-grafana-*' -exec mv {} /var/lib/grafana/plugins/vertamedia-clickhouse-datasource \; && \
+    rm /tmp/clickhouse-plugin.zip
+
+COPY dashboards/grafana/clickhouse.yml /etc/grafana/provisioning/datasources/
+COPY dashboards/grafana/crypto-analytics.json /etc/grafana/provisioning/dashboards/
+
+RUN chown -R grafana:root /var/lib/grafana/plugins && \
+    chown -R grafana:root /etc/grafana/provisioning
+
+USER grafana

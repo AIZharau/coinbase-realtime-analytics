@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: ClickHouse
+    type: vertamedia-clickhouse-datasource
+    access: proxy
+    url: http://clickhouse:8123
+    basicAuth: false
+    secureJsonData:
+      password: clickhouse_password
+    jsonData:
+      defaultDatabase: coinbase_market_data
+      username: default
+      password: clickhouse_password
+      usePost: true 
+      timeout: 30 
+    editable: false

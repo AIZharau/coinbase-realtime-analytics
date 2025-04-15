@@ -1,0 +1,84 @@
+{
+  "title": "Crypto Analytics",
+  "description": "Real-time cryptocurrency market data",
+  "tags": ["crypto", "clickhouse"],
+  "timezone": "UTC",  // Явно указываем UTC для единообразия
+  "editable": true,
+  "panels": [
+    {
+      "title": "Price History",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT toStartOfMinute(time) as time, avg(price) as price FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND $__timeFilter(time) GROUP BY time ORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        },
+        {
+          "rawSql": "SELECT toStartOfMinute(time) as time, avg(price) as price FROM coinbase_market_data.raw_trades WHERE product_id = 'ETH-USD' AND $__timeFilter(time) GROUP BY time ORDER BY time",
+          "format": "time_series",
+          "refId": "B"
+        }
+      ],
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "single"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        }
+      }
+    },
+    {
+      "title": "Volume (24h)",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT sum(last_size) as volume FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND time >= now() - INTERVAL 24 HOUR",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {"mode": "absolute", "steps": []},
+          "displayName": "BTC Volume"
+        }
+      }
+    },
+    {
+      "title": "OHLC Last Hour",
+      "type": "table",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 6},
+      "datasource": "ClickHouse",
+      "targets": [
+        {
+          "rawSql": "SELECT product_id, open, high, low, close FROM coinbase_market_data.ohlc WHERE time >= now() - INTERVAL 1 HOUR ORDER BY time DESC LIMIT 10",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "product",
+        "label": "Cryptocurrency",
+        "type": "query",
+        "datasource": "ClickHouse",
+        "query": "SELECT DISTINCT product_id FROM coinbase_market_data.raw_trades"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  }
+}
