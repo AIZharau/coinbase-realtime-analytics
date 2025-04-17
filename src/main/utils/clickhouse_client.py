@@ -42,32 +42,59 @@ class ClickHouseClient:
             logger.error(f"Failed to insert trade: {e}")
             raise
 
-# правка 1
     def update_ohlc(self, product_id: str, time: str, price: float):
         try:
-            self.client.execute(
+            exists = self.client.execute(
                 """
-                INSERT INTO coinbase_market_data.ohlc
-                (product_id, time, open, high, low, close)
-                VALUES (
-                    %(product_id)s,
-                    toDateTime(%(time)s),
-                    %(price)s,
-                    %(price)s,
-                    %(price)s,
-                    %(price)s
-                )
-                ON DUPLICATE KEY UPDATE
-                    high = if(price > high, price, high),
-                    low = if(price < low, price, low),
-                    close = price
+                SELECT 1
+                FROM coinbase_market_data.ohlc
+                WHERE product_id = %(product_id)s AND time = toDateTime(%(time)s)
                 """,
                 {
                     'product_id': product_id,
-                    'time': time,
-                    'price': price
+                    'time': time
                 }
             )
+            
+            if exists:
+                self.client.execute(
+                    """
+                    ALTER TABLE coinbase_market_data.ohlc
+                    UPDATE 
+                        high = greatest(high, %(price)s),
+                        low = least(low, %(price)s),
+                        close = %(price)s
+                    WHERE 
+                        product_id = %(product_id)s AND
+                        time = toDateTime(%(time)s)
+                    """,
+                    {
+                        'product_id': product_id,
+                        'time': time,
+                        'price': price
+                    }
+                )
+            else:
+                self.client.execute(
+                    """
+                    INSERT INTO coinbase_market_data.ohlc
+                    (product_id, time, open, high, low, close, volume)
+                    VALUES (
+                        %(product_id)s,
+                        toDateTime(%(time)s),
+                        %(price)s,
+                        %(price)s,
+                        %(price)s,
+                        %(price)s,
+                        0
+                    )
+                    """,
+                    {
+                        'product_id': product_id,
+                        'time': time,
+                        'price': price
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to update OHLC: {e}")
             raise
@@ -94,12 +121,3 @@ class ClickHouseClient:
         except Exception as e:
             logger.error(f"Failed to calculate spreads: {e}")
             raise
-
-            
-# from clickhouse_driver import Client
-# class ClickHouseClient:
-#     def __init__(self, config):
-#         self.client = Client(**config)
-        
-#     def execute(self, query, params=None):
-#         return self.client.execute(query, params or {})

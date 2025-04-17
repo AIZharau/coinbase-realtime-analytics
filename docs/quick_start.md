@@ -41,20 +41,30 @@ make init-db
 
 ## 5. Run Data Pipeline
 
-Open two terminal windows:
+You can run components both locally and in containers:
 
-**Terminal 1 (Producer):**
+### Option 1: Run the entire pipeline in containers
 ```bash
+make pipeline-up
+```
+
+### Option 2: Launch components separately
+
+**Run Producer:**
+```bash
+# Local
 make produce
+
+# In Docker container
+make produce-docker-up
 ```
 
-**Terminal 2 (Consumer):**
+**Run Consumer:**
 ```bash
+# Local
 make consume
-```
 
-### Alternative: Run consumer in Docker
-```bash
+# In Docker container
 make consume-docker-up
 ```
 
@@ -73,9 +83,12 @@ make consume-docker-up
 # Stop all services
 make down-all
 
-# Stop specific components
+make pipeline-down
+
+# Stopping individual components
 make redpanda-down
 make grafana-down
+make produce-docker-down
 make consume-docker-down
 ```
 
@@ -90,6 +103,65 @@ make clean
 # Release all resources
 make kill
 ```
+
+## 8. Cloud Deployment (Yandex Cloud)
+
+For production environments, you can deploy the infrastructure to Yandex Cloud using Terraform.
+
+### Prerequisites:
+- Terraform installed (version >= 1.0.0)
+- Yandex Cloud CLI installed and configured
+- Service account with appropriate permissions
+- SSH key pair for VM access
+
+### Cloud Architecture:
+
+The cloud infrastructure includes:
+- A virtual machine running Redpanda, Producer, and Consumer as systemd services
+- A managed ClickHouse cluster for data storage
+- S3-compatible object storage for raw data
+
+The components work together as follows:
+1. The Producer service on the VM connects to the Coinbase WebSocket feed
+2. Data is streamed to a Redpanda instance running on the same VM
+3. The Consumer service reads from Redpanda and loads data into the managed ClickHouse service
+4. Grafana can connect to the ClickHouse service to visualize the data
+
+### Deployment Steps:
+
+1. **Configure Yandex Cloud Credentials**:
+```bash
+# Configure environment variables
+cp terraform/.env.template terraform/.env
+# Edit the file with your credentials
+source terraform/.env
+```
+
+2. **Deploy Infrastructure**:
+```bash
+# Initialize and apply Terraform configuration
+make infra-cloud-up
+```
+
+3. **Verify Deployment**:
+```bash
+# View outputs (clickhouse host, VM IP, etc.)
+make tf-output
+```
+
+4. **Access the VM**:
+```bash
+# SSH into the virtual machine
+ssh ubuntu@<vm_external_ip>
+```
+
+5. **Destroy Resources**:
+```bash
+# When finished, tear down the infrastructure
+make infra-cloud-down
+```
+
+For more details, see the [Terraform README](../terraform/README.md).
 
 ## Troubleshooting
 

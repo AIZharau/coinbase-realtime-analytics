@@ -2,7 +2,7 @@
   "title": "Crypto Analytics",
   "description": "Real-time cryptocurrency market data",
   "tags": ["crypto", "clickhouse"],
-  "timezone": "UTC",  // Явно указываем UTC для единообразия
+  "timezone": "UTC",
   "editable": true,
   "panels": [
     {

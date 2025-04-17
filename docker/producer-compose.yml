@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  producer:
+    build:
+      context: ..
+      dockerfile: docker/producer/Dockerfile
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      REDPANDA_BROKERS: "redpanda:9092"
+    volumes:
+      - ../src:/app/src
+    networks:
+      - coinbase-network
+
+networks:
+  coinbase-network:
+    external: true 

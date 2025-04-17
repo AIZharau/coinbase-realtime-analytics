@@ -1,6 +1,7 @@
 GRAFANA=docker compose -f docker/grafana-compose.yml
 COMPOSE=docker compose -f docker/docker-compose.yml
 CONSUMER=docker compose -f docker/consumer-compose.yml
+PRODUCER=docker compose -f docker/producer-compose.yml
 NETWORK_NAME=coinbase-network
 
 # Environment setup
@@ -36,6 +37,14 @@ network-remove:
 .PHONY: produce
 produce:
 	python3 src/main/coinbase_producer.py
+
+.PHONY: produce-docker-up
+produce-docker-up:
+	${PRODUCER} up --build -d producer
+
+.PHONY: produce-docker-down
+produce-docker-down:
+	${PRODUCER} down producer
 
 .PHONY: consume
 consume:
@@ -75,12 +84,49 @@ grafana-down:
 init-db:
 	curl http://localhost:8123 --data-binary @queries/clickhouse_tables.sql
 
+# Terraform operations
+.PHONY: tf-init
+tf-init:
+	cd terraform && terraform init
+
+.PHONY: tf-plan
+tf-plan:
+	cd terraform && terraform plan
+
+.PHONY: tf-apply
+tf-apply:
+	cd terraform && terraform apply
+
+.PHONY: tf-destroy
+tf-destroy:
+	cd terraform && terraform destroy
+
+.PHONY: tf-output
+tf-output:
+	cd terraform && terraform output
+
+.PHONY: infra-cloud-up
+infra-cloud-up: tf-init tf-apply
+	@echo "Cloud infrastructure deployed"
+
+.PHONY: infra-cloud-down
+infra-cloud-down: tf-destroy
+	@echo "Cloud infrastructure destroyed"
+
 # Utility commands
 .PHONY: up-all
 up-all: infra-up grafana-up
 
+.PHONY: pipeline-up
+pipeline-up: infra-up consume-docker-up produce-docker-up grafana-up
+	@echo "Full pipeline started"
+
+.PHONY: pipeline-down
+pipeline-down: consume-docker-down produce-docker-down
+	@echo "Pipeline services stopped"
+
 .PHONY: down-all
-down-all: infra-down grafana-down
+down-all: infra-down grafana-down pipeline-down
 
 # Cleanup
 .PHONY: clean

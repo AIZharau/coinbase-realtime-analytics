@@ -25,11 +25,27 @@ Follow the [Quick Start Guide](docs/quick_start.md) Guide for:
 
 2. Key Operations
 ```bash
-# Start core services (see docker/README.md)
+# Start core services (see 
+docker/README.md)
+make pipeline-up
+
+# OR launching core services without Producer/Consumer
 make infra-up
 ```
 
-3. Monitoring
+3. Cloud Deployment (Yandex Cloud)
+```bash
+# Deploy infrastructure to Yandex Cloud
+make infra-cloud-up
+
+# View infrastructure outputs
+make tf-output
+
+# Destroy cloud infrastructure
+make infra-cloud-down
+```
+
+4. Monitoring
 Access pre-built dashboards:
 ![Grafana Sample](dashboards/dash.png)
 
@@ -39,16 +55,21 @@ Access pre-built dashboards:
 .
 ├── docker/                # Container configurations
 │   ├── redpanda/          # (Future) WASM transform configs
+│   ├── producer/          # Coinbase producer container
+│   ├── consumer/          # ClickHouse consumer container
 │   ├── grafana/           # Dashboard provisioning
 │   └── *.yml             # Compose files
 ├── src/main/
 │   ├── coinbase_producer.py # WebSocket client
 │   ├── clickhouse_consumer.py # Data loader
 │   └── utils/            # Shared helpers
-├── docs/                   # Technical documentation
-│   ├── api_reference.md    # Interface specifications
-│   ├── quick_start.md      # Setup instructions
-│   └── pipeline.png       # Architecture diagram
+├── terraform/            # Infrastructure as code
+│   ├── *.tf              # Terraform configuration files
+│   └── README.md         # Terraform setup instructions
+├── docs/                 # Technical documentation
+│   ├── api_reference.md  # Interface specifications
+│   ├── quick_start.md    # Setup instructions
+│   └── pipeline.png      # Architecture diagram
 ├── dashboards/           # Grafana JSON exports
 └── Makefile              # Common tasks
 ```
@@ -59,11 +80,12 @@ Access pre-built dashboards:
 ✓ JSON messaging  
 ✓ Docker deployment  
 ✓ Basic Grafana dashboards  
+✓ Containerized Producer/Consumer
 
 ### Planned
 ◉ WASM transformations in Redpanda  
 ◉ Avro schema enforcement  
-◉ Terraform infrastructure  
+✓ Terraform infrastructure  
 ◉ Workflow orchestration  
 
 
