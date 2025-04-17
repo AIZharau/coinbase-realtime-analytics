@@ -1,189 +1,214 @@
-# PROJECT SETUP GUIDE
+# Quick Start Guide
 
-## 1. Prerequisites
-- Docker and Docker Compose installed
-- Python 3.9+
-- Make utility
-- curl (for database initialization)
+This guide will help you set up and run the Coinbase Realtime Analytics pipeline on your local machine.
 
-## 2. Initial Setup
+## Prerequisites
 
-### Create Python environment:
-```bash
-make venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-make install
-```
+- Docker and Docker Compose
+- Python 3.9 or higher
+- Git
+- 4GB RAM minimum (8GB recommended)
+- For cloud deployment:
+  - [Terraform CLI](https://developer.hashicorp.com/terraform/install) (v1.0.0+)
+  - [Yandex Cloud CLI](https://cloud.yandex.com/docs/cli/quickstart) (configured with valid credentials)
 
-## 3. Start Infrastructure Services
+## Installation
 
-### Option A: Start all services at once:
-```bash
-make up-all
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/coinbase-realtime-analytics.git
+   cd coinbase-realtime-analytics
+   ```
 
-### Option B: Start services individually:
-```bash
-# Build network
-make network-create
+2. Set up virtual environment (optional):
+   ```bash
+   make venv
+   source .venv/bin/activate  # On Linux/Mac
+   # OR
+   .venv\Scripts\activate     # On Windows
+   ```
 
-# Start Redpanda (Kafka-compatible message broker)
-make redpanda-up
+3. Install dependencies:
+   ```bash
+   make install
+   ```
 
-# Start Grafana and ClickHouse
-make grafana-up
-```
+## Running the Pipeline
 
-## 4. Initialize Database
-```bash
-make init-db
-```
+### Basic Setup
 
-## 5. Run Data Pipeline
+1. Start the infrastructure (ClickHouse, Redpanda):
+   ```bash
+   make infra-up
+   ```
 
-You can run components both locally and in containers:
+2. Initialize the database schema:
+   ```bash
+   make init-db
+   ```
 
-### Option 1: Run the entire pipeline in containers
-```bash
-make pipeline-up
-```
+3. Start the dashboards:
+   ```bash
+   make grafana-up
+   ```
 
-### Option 2: Launch components separately
+4. Start the data pipeline:
+   ```bash
+   make produce-docker-up
+   make consume-docker-up
+   ```
 
-**Run Producer:**
-```bash
-# Local
-make produce
+5. Start everything at once (alternative):
+   ```bash
+   make pipeline-up
+   ```
 
-# In Docker container
-make produce-docker-up
-```
+### Workflow Orchestration with Airflow
 
-**Run Consumer:**
-```bash
-# Local
-make consume
+1. Set up and start Airflow:
+   ```bash
+   make airflow-up
+   ```
 
-# In Docker container
-make consume-docker-up
-```
+2. Access the Airflow UI:
+   - URL: http://localhost:8081
+   - Username: `airflow`
+   - Password: `airflow`
 
-## 6. Access Monitoring Interfaces
+3. Start the complete system with orchestration:
+   ```bash
+   make orchestration-up
+   ```
 
-| Service            | URL                      | Credentials       |
-|--------------------|--------------------------|-------------------|
-| Grafana Dashboard  | http://localhost:3000    | admin/admin       |
-| Redpanda Console   | http://localhost:8080    | -                 |
-| ClickHouse HTTP    | http://localhost:8123    | -                 |
+## Cloud Deployment with Terraform
 
-## 7. Management Commands
+1. Install required tools:
+   ```bash
+   # Install Terraform CLI (example for Ubuntu)
+   make install-terraform
+   
+   # Install Yandex Cloud CLI
+   make install-yc
+   ```
 
-### Service Control:
-```bash
-# Stop all services
-make down-all
+2. Configure Yandex Cloud credentials:
+   ```bash
+   # Configure yc CLI
+   yc init
+   
+   # Export required variables
+   export YC_TOKEN=$(yc iam create-token)
+   export YC_CLOUD_ID=$(yc config get cloud-id)
+   export YC_FOLDER_ID=$(yc config get folder-id)
+   ```
 
-make pipeline-down
+3. Deploy to the cloud:
+   ```bash
+   make infra-cloud-up
+   ```
 
-# Stopping individual components
-make redpanda-down
-make grafana-down
-make produce-docker-down
-make consume-docker-down
-```
+4. Get deployment information:
+   ```bash
+   make tf-output
+   ```
 
-### Maintenance:
-```bash
-# Rebuild Grafana containers
-make grafana-build
+5. Destroy cloud resources when done:
+   ```bash
+   make infra-cloud-down
+   ```
 
-# Clean up everything
-make clean
+For detailed information on Terraform infrastructure, refer to [Terraform Documentation](../terraform/README.md).
 
-# Release all resources
-make kill
-```
+## Monitoring
 
-## 8. Cloud Deployment (Yandex Cloud)
+1. Grafana dashboards are available at:
+   - URL: http://localhost:3000
+   - Username: `admin`
+   - Password: `admin`
 
-For production environments, you can deploy the infrastructure to Yandex Cloud using Terraform.
+2. Redpanda Console is available at:
+   - URL: http://localhost:8080
 
-### Prerequisites:
-- Terraform installed (version >= 1.0.0)
-- Yandex Cloud CLI installed and configured
-- Service account with appropriate permissions
-- SSH key pair for VM access
+3. ClickHouse has a web interface at:
+   - URL: http://localhost:8123/play
 
-### Cloud Architecture:
+## Stopping the Pipeline
 
-The cloud infrastructure includes:
-- A virtual machine running Redpanda, Producer, and Consumer as systemd services
-- A managed ClickHouse cluster for data storage
-- S3-compatible object storage for raw data
+1. Stop individual components:
+   ```bash
+   make grafana-down
+   make consume-docker-down
+   make produce-docker-down
+   make infra-down
+   make airflow-down
+   ```
 
-The components work together as follows:
-1. The Producer service on the VM connects to the Coinbase WebSocket feed
-2. Data is streamed to a Redpanda instance running on the same VM
-3. The Consumer service reads from Redpanda and loads data into the managed ClickHouse service
-4. Grafana can connect to the ClickHouse service to visualize the data
+2. Stop everything at once:
+   ```bash
+   make down-all
+   ```
 
-### Deployment Steps:
+3. Clean up all resources (including volumes):
+   ```bash
+   make kill
+   ```
 
-1. **Configure Yandex Cloud Credentials**:
-```bash
-# Configure environment variables
-cp terraform/.env.template terraform/.env
-# Edit the file with your credentials
-source terraform/.env
-```
+## Common Makefile Commands
 
-2. **Deploy Infrastructure**:
-```bash
-# Initialize and apply Terraform configuration
-make infra-cloud-up
-```
+Below is a list of all available Makefile commands grouped by purpose:
 
-3. **Verify Deployment**:
-```bash
-# View outputs (clickhouse host, VM IP, etc.)
-make tf-output
-```
+### Setup
+- `make venv` - Create Python virtual environment
+- `make install` - Install project dependencies
+- `make network-create` - Create Docker network
+- `make install-terraform` - Install Terraform CLI
+- `make install-yc` - Install Yandex Cloud CLI
 
-4. **Access the VM**:
-```bash
-# SSH into the virtual machine
-ssh ubuntu@<vm_external_ip>
-```
+### Pipeline
+- `make pipeline-up` - Start full pipeline (infrastructure, producer, consumer, Grafana)
+- `make pipeline-down` - Stop pipeline services
+- `make orchestration-up` - Start pipeline with Airflow orchestration
+- `make orchestration-down` - Stop pipeline with Airflow orchestration
 
-5. **Destroy Resources**:
-```bash
-# When finished, tear down the infrastructure
-make infra-cloud-down
-```
+### Individual Services
+- `make infra-up` - Start base infrastructure (Redpanda, ClickHouse)
+- `make grafana-up` - Start Grafana dashboards
+- `make produce-docker-up` - Start Coinbase data producer
+- `make consume-docker-up` - Start ClickHouse consumer
+- `make airflow-up` - Start Airflow orchestration
 
-For more details, see the [Terraform README](../terraform/README.md).
+### Cloud Operations
+- `make tf-init` - Initialize Terraform
+- `make tf-plan` - Plan Terraform changes
+- `make tf-apply` - Apply Terraform changes
+- `make tf-destroy` - Destroy Terraform resources
+- `make infra-cloud-up` - Deploy to cloud
+- `make infra-cloud-down` - Destroy cloud resources
+
+### Cleanup
+- `make down-all` - Stop all services
+- `make clean` - Clean up local resources
+- `make kill` - Remove all resources including volumes and networks
 
 ## Troubleshooting
 
-1. **Port conflicts**:
-   - Check running containers: `docker ps`
-   - Stop conflicting services
+1. Check component logs:
+   ```bash
+   docker logs redpanda
+   docker logs clickhouse
+   docker logs grafana
+   make airflow-logs
+   ```
 
-2. **Consumer issues**:
-   - Verify Redpanda is running: `make logs`
-   - Check database connection
+2. Reset the environment:
+   ```bash
+   make kill
+   make pipeline-up
+   ```
 
-3. **Grafana dashboard not loading**:
-   - Wait 30-60 seconds after startup
-   - Check logs: `make grafana-logs`
+## Next Steps
 
-4. **Docker issues**:
-   - Ensure Docker daemon is running
-   - Check available resources (`docker stats`)
-
-## Development Tips
-
-- To modify the consumer logic, edit `src/main/clickhouse_consumer.py`
-- Producer configuration is in `src/main/coinbase_producer.py`
-- Database schema is defined in `queries/clickhouse_tables.sql`
-- Use `make clean` before committing to ensure no containers are running
+- Explore the [API Reference](api_reference.md) for integration details
+- Review the [Airflow Workflows](../docker/airflow/README.md) for orchestration
+- Check out the [Terraform Guide](../terraform/README.md) for cloud deployment
+- Understand the [Architecture](architecture.md) of the system

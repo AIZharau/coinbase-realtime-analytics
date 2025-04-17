@@ -4,14 +4,14 @@ datasources:
     type: vertamedia-clickhouse-datasource
     url: http://clickhouse:8123
     access: proxy
+    isDefault: true
     basicAuth: false
     jsonData:
       defaultDatabase: "coinbase_market_data"
       username: "default"
-      usePost: true
+      timeInterval: "1s"
       addCorsHeader: true
       tlsSkipVerify: true
-      timeout: 30
     secureJsonData:
       password: "clickhouse_password"
     editable: true

@@ -12,9 +12,14 @@ RUN unzip /tmp/clickhouse-plugin.zip -d /var/lib/grafana-plugins/ && \
     rm /tmp/clickhouse-plugin.zip
 
 COPY dashboards/grafana/clickhouse.yml /etc/grafana/provisioning/datasources/
+COPY dashboards/grafana/dashboards.yml /etc/grafana/provisioning/dashboards/
 COPY dashboards/grafana/crypto-analytics.json /etc/grafana/provisioning/dashboards/
 
 RUN chown -R grafana:root /var/lib/grafana-plugins && \
     chown -R grafana:root /etc/grafana/provisioning
+
+ENV GF_PATHS_PLUGINS=/var/lib/grafana-plugins
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=vertamedia-clickhouse-datasource
+ENV GF_LOG_LEVEL=debug
 
 USER grafana

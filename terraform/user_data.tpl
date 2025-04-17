@@ -224,6 +224,39 @@ EOF
 apt-get install -y curl
 curl -X POST "http://${clickhouse_host}:8123" --data-binary @init_clickhouse.sql -u ${clickhouse_user}:${clickhouse_password}
 
+# Install and configure Grafana
+apt-get install -y apt-transport-https software-properties-common
+wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
+echo "deb https://packages.grafana.com/oss/deb stable main" | tee -a /etc/apt/sources.list.d/grafana.list
+apt-get update
+apt-get install -y grafana
+
+# Create Grafana datasource for ClickHouse
+mkdir -p /etc/grafana/provisioning/datasources/
+cat > /etc/grafana/provisioning/datasources/clickhouse.yaml << EOF
+apiVersion: 1
+datasources:
+  - name: ClickHouse
+    type: vertamedia-clickhouse-datasource
+    url: http://${clickhouse_host}:8123
+    access: proxy
+    basicAuth: false
+    jsonData:
+      defaultDatabase: "coinbase_market_data"
+      username: "${clickhouse_user}"
+      usePost: true
+      addCorsHeader: true
+      tlsSkipVerify: true
+      timeout: 30
+    secureJsonData:
+      password: "${clickhouse_password}"
+    editable: true
+EOF
+
+# Enable and start Grafana
+systemctl enable grafana-server
+systemctl start grafana-server
+
 # Enable and start services
 systemctl daemon-reload
 systemctl enable redpanda.service

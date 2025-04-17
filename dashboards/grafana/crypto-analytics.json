@@ -1,84 +1,216 @@
 {
-  "title": "Crypto Analytics",
-  "description": "Real-time cryptocurrency market data",
-  "tags": ["crypto", "clickhouse"],
-  "timezone": "UTC",
+  "annotations": {
+    "list": []
+  },
   "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "title": "Price History",
-      "type": "timeseries",
-      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
-      "datasource": "ClickHouse",
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "P5F5DE490562DB43D"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 1,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.5.15",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
-          "rawSql": "SELECT toStartOfMinute(time) as time, avg(price) as price FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND $__timeFilter(time) GROUP BY time ORDER BY time",
+          "datasource": {
+            "type": "vertamedia-clickhouse-datasource",
+            "uid": "P5F5DE490562DB43D"
+          },
           "format": "time_series",
+          "meta": {
+            "builderOptions": {}
+          },
+          "rawSql": "SELECT toUnixTimestamp(toStartOfMinute(time))*1000 as t, avg(price) as price FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND time >= subtractHours(now(), 1) GROUP BY t ORDER BY t",
           "refId": "A"
-        },
-        {
-          "rawSql": "SELECT toStartOfMinute(time) as time, avg(price) as price FROM coinbase_market_data.raw_trades WHERE product_id = 'ETH-USD' AND $__timeFilter(time) GROUP BY time ORDER BY time",
-          "format": "time_series",
-          "refId": "B"
         }
       ],
-      "options": {
-        "legend": {"displayMode": "list", "placement": "bottom"},
-        "tooltip": {"mode": "single"}
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "BTC-USD Price",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "P5F5DE490562DB43D"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD"
-        }
-      }
-    },
-    {
-      "title": "Volume (24h)",
-      "type": "stat",
-      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
-      "datasource": "ClickHouse",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.15",
       "targets": [
         {
-          "rawSql": "SELECT sum(last_size) as volume FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND time >= now() - INTERVAL 24 HOUR",
+          "datasource": {
+            "type": "vertamedia-clickhouse-datasource",
+            "uid": "P5F5DE490562DB43D"
+          },
           "format": "table",
+          "meta": {
+            "builderOptions": {}
+          },
+          "rawSql": "SELECT sum(last_size) as volume FROM coinbase_market_data.raw_trades WHERE product_id = 'BTC-USD' AND time >= now() - INTERVAL 24 HOUR",
           "refId": "A"
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "thresholds": {"mode": "absolute", "steps": []},
-          "displayName": "BTC Volume"
-        }
-      }
+      "title": "BTC Volume (24h)",
+      "type": "stat"
     },
     {
-      "title": "OHLC Last Hour",
-      "type": "table",
-      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 6},
-      "datasource": "ClickHouse",
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "P5F5DE490562DB43D"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "9.5.15",
       "targets": [
         {
-          "rawSql": "SELECT product_id, open, high, low, close FROM coinbase_market_data.ohlc WHERE time >= now() - INTERVAL 1 HOUR ORDER BY time DESC LIMIT 10",
+          "datasource": {
+            "type": "vertamedia-clickhouse-datasource",
+            "uid": "P5F5DE490562DB43D"
+          },
           "format": "table",
+          "meta": {
+            "builderOptions": {}
+          },
+          "rawSql": "SELECT toString(time) as time, product_id, price, last_size FROM coinbase_market_data.raw_trades ORDER BY time DESC LIMIT 10",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Recent Trades",
+      "type": "table"
     }
   ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["crypto", "clickhouse"],
   "templating": {
-    "list": [
-      {
-        "name": "product",
-        "label": "Cryptocurrency",
-        "type": "query",
-        "datasource": "ClickHouse",
-        "query": "SELECT DISTINCT product_id FROM coinbase_market_data.raw_trades"
-      }
-    ]
+    "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
-  }
-}
+  },
+  "timepicker": {},
+  "timezone": "UTC",
+  "title": "Crypto Analytics",
+  "uid": "TxV0HHGVk",
+  "version": 1,
+  "weekStart": ""
+} 

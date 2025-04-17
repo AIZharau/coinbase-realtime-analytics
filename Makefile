@@ -2,7 +2,10 @@ GRAFANA=docker compose -f docker/grafana-compose.yml
 COMPOSE=docker compose -f docker/docker-compose.yml
 CONSUMER=docker compose -f docker/consumer-compose.yml
 PRODUCER=docker compose -f docker/producer-compose.yml
+AIRFLOW=docker compose -f docker/airflow/docker-compose.yaml
 NETWORK_NAME=coinbase-network
+TF_VERSION=1.6.5
+YC_VERSION=latest
 
 # Environment setup
 .PHONY: venv
@@ -13,6 +16,53 @@ venv:
 .PHONY: install
 install:
 	pip install -r requirements.txt
+
+.PHONY: install-terraform
+install-terraform:
+	@echo "Installing Terraform ${TF_VERSION}..."
+	@if [ -f /etc/os-release ]; then \
+		. /etc/os-release; \
+		case "$$ID" in \
+			ubuntu|debian) \
+				sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl; \
+				curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -; \
+				sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $$(lsb_release -cs) main"; \
+				sudo apt-get update && sudo apt-get install -y terraform=${TF_VERSION}; \
+				echo "Terraform installed successfully." ;; \
+			centos|rhel|fedora) \
+				sudo yum install -y yum-utils; \
+				sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo; \
+				sudo yum -y install terraform-${TF_VERSION}; \
+				echo "Terraform installed successfully." ;; \
+			*) \
+				echo "Unsupported OS. Please install Terraform manually from https://developer.hashicorp.com/terraform/install" ;; \
+		esac \
+	else \
+		echo "Cannot detect OS. Please install Terraform manually from https://developer.hashicorp.com/terraform/install"; \
+	fi
+	@echo "Verifying Terraform installation..."
+	@terraform version
+
+.PHONY: install-yc
+install-yc:
+	@echo "Installing Yandex Cloud CLI..."
+	@if [ -f /etc/os-release ]; then \
+		. /etc/os-release; \
+		case "$$ID" in \
+			ubuntu|debian) \
+				curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash; \
+				echo "Yandex Cloud CLI installed successfully." ;; \
+			centos|rhel|fedora) \
+				curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash; \
+				echo "Yandex Cloud CLI installed successfully." ;; \
+			*) \
+				echo "Unsupported OS. Please install Yandex Cloud CLI manually from https://cloud.yandex.com/docs/cli/quickstart" ;; \
+		esac \
+	else \
+		echo "Cannot detect OS. Please install Yandex Cloud CLI manually from https://cloud.yandex.com/docs/cli/quickstart"; \
+	fi
+	@echo "Verifying Yandex Cloud CLI installation..."
+	@yc version || echo "Please restart your shell or run 'source ~/.bashrc' to use yc command"
 
 # Network management
 .PHONY: network-create
@@ -79,6 +129,28 @@ grafana-up:
 grafana-down:
 	${GRAFANA} down
 
+# Airflow operations
+.PHONY: airflow-setup
+airflow-setup:
+	mkdir -p orchestration/{dags,plugins,logs}
+	@echo "Created Airflow directories"
+
+.PHONY: airflow-build
+airflow-build:
+	${AIRFLOW} build --no-cache
+
+.PHONY: airflow-up
+airflow-up:
+	${AIRFLOW} up -d
+
+.PHONY: airflow-down
+airflow-down:
+	${AIRFLOW} down
+
+.PHONY: airflow-logs
+airflow-logs:
+	${AIRFLOW} logs -f airflow-standalone
+
 # Database operations
 .PHONY: init-db
 init-db:
@@ -125,8 +197,16 @@ pipeline-up: infra-up consume-docker-up produce-docker-up grafana-up
 pipeline-down: consume-docker-down produce-docker-down
 	@echo "Pipeline services stopped"
 
+.PHONY: orchestration-up
+orchestration-up: pipeline-up airflow-up
+	@echo "Full pipeline with orchestration started"
+
+.PHONY: orchestration-down
+orchestration-down: pipeline-down airflow-down
+	@echo "Pipeline with orchestration stopped"
+
 .PHONY: down-all
-down-all: infra-down grafana-down pipeline-down
+down-all: infra-down grafana-down pipeline-down airflow-down
 
 # Cleanup
 .PHONY: clean
