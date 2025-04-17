@@ -5,15 +5,20 @@ services:
     build:
       context: ..
       dockerfile: docker/producer/Dockerfile
-    depends_on:
-      redpanda:
-        condition: service_healthy
+    container_name: coinbase-producer
+    restart: on-failure
     environment:
       REDPANDA_BROKERS: "redpanda:9092"
     volumes:
       - ../src:/app/src
     networks:
       - coinbase-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.gethostbyname('redpanda')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 networks:
   coinbase-network:

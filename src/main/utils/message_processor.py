@@ -9,7 +9,7 @@ logger = setup_logging(__name__)
 
 class MessageProcessor:
     AGGREGATION_INTERVAL = 15  # seconds
-    PRICE_JUMP_THRESHOLD = 0.01  # 1%
+    PRICE_JUMP_THRESHOLD = 0.05  # 5%
     VOLUME_SPIKE_THRESHOLD = 3  # 3x
 
     def __init__(self):
@@ -42,7 +42,6 @@ class MessageProcessor:
                 (datetime.now() - self.last_aggregation_time).total_seconds() >= self.AGGREGATION_INTERVAL)
 
     def _process_aggregates(self, product_id: str):
-        """Process OHLC and spread aggregates for given product"""
         aggregates = [
             {
                 'name': 'ohlc',
@@ -92,7 +91,6 @@ class MessageProcessor:
                 raise
 
     def _detect_anomalies(self, message: Dict):
-        """Check for price and volume anomalies"""
         product_id = message['product_id']
         current_price = float(message['price'])
         current_volume = float(message.get('last_size', 0))
@@ -116,7 +114,6 @@ class MessageProcessor:
         self._update_price_record(product_id, current_price, current_volume, message['time'])
 
     def _init_price_record(self, product_id: str, price: float, volume: float, time: str):
-        """Initialize new price tracking record"""
         self.last_prices[product_id] = {
             'price': price,
             'volume': volume,
@@ -124,18 +121,15 @@ class MessageProcessor:
         }
 
     def _calculate_metrics(self, current_price: float, current_volume: float, last: Dict) -> tuple:
-        """Calculate price jump and volume spike metrics"""
         price_jump = abs(current_price - last['price']) / last['price']
         volume_spike = current_volume / last['volume'] if last['volume'] > 0 else 0
         return price_jump, volume_spike
 
     def _is_anomaly(self, price_jump: float, volume_spike: float) -> bool:
-        """Check if metrics exceed thresholds"""
         return (price_jump > self.PRICE_JUMP_THRESHOLD or 
                 volume_spike > self.VOLUME_SPIKE_THRESHOLD)
 
     def _log_anomaly(self, product_id: str, time: str, metrics: tuple, prices: tuple, volumes: tuple):
-        """Log detected anomaly to ClickHouse"""
         price_jump, volume_spike = metrics
         current_price, last_price = prices
         current_volume, last_volume = volumes
@@ -171,7 +165,6 @@ class MessageProcessor:
             raise
 
     def _update_price_record(self, product_id: str, price: float, volume: float, time: str):
-        """Update last price record for product"""
         self.last_prices[product_id] = {
             'price': price,
             'volume': volume,

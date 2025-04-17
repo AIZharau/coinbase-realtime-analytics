@@ -1,12 +1,17 @@
 import json
-import logging
 import websocket
 import threading
 import time
+import os
+import sys
+import socket
 from confluent_kafka import Producer
 from utils.config import REDPANDA_CONFIG
 from utils.logging import setup_logging
 from utils.data_formatter import CoinbaseDataFormatter
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from utils.connection_helper import wait_for_service
 
 logger = setup_logging(__name__)
 
@@ -18,6 +23,10 @@ class CoinbaseWebSocketProducer:
         self.channels = ["ticker"] # "heartbeats"
         self.ws = None
         self.topic = 'coinbase_market_data'
+        
+        redpanda_brokers = os.environ.get('REDPANDA_BROKERS', REDPANDA_CONFIG['bootstrap.servers'])
+        
+        self._wait_for_redpanda(redpanda_brokers)
 
         self.producer = Producer({
             'bootstrap.servers': REDPANDA_CONFIG['bootstrap.servers'],
@@ -30,9 +39,24 @@ class CoinbaseWebSocketProducer:
             'message.max.bytes': 10485760,
             'error_cb': self._error_callback
         })
+    
+    def _wait_for_redpanda(self, redpanda_brokers):
+        try:
+            redpanda_host = redpanda_brokers.split(':')[0]
+            redpanda_port = int(redpanda_brokers.split(':')[1])
+            
+            logger.info(f"Waiting for Redpanda at {redpanda_host}:{redpanda_port}...")
+            if not wait_for_service(redpanda_host, redpanda_port, timeout=300, interval=5):
+                logger.error("Failed to connect to Redpanda, exiting")
+                sys.exit(1)
+                
+            logger.info("Redpanda is available")
+        except Exception as e:
+            logger.error(f"Error waiting for Redpanda: {e}")
+            sys.exit(1)
 
     def _error_callback(self, error):
-        logging.error(f"Producer error: {error}")
+        logger.error(f"Producer error: {error}")
         
     def prepare_data(self, data, ctx=None):
         return CoinbaseDataFormatter.prepare_producer_data(data)
@@ -67,10 +91,10 @@ class CoinbaseWebSocketProducer:
     
 
     def on_error(self, ws, error):
-        logging.error(f"WebSocket error: {error}")
+        logger.error(f"WebSocket error: {error}")
 
     def on_close(self, ws, close_status_code, close_msg):
-        logging.info("Connection closed")
+        logger.info("Connection closed")
         self.producer.flush()
 
     def on_open(self, ws):
@@ -80,10 +104,10 @@ class CoinbaseWebSocketProducer:
             "channels": self.channels
         }
         ws.send(json.dumps(subscribe_msg))
-        logging.info(f"Subscribed to {self.products}")
+        logger.info(f"Subscribed to {self.products}")
 
     def run(self):
-        logging.info("Connecting to Coinbase WebSocket...")
+        logger.info("Connecting to Coinbase WebSocket...")
         self.ws = websocket.WebSocketApp(
             self.ws_url,
             on_open=self.on_open,
@@ -100,15 +124,15 @@ class CoinbaseWebSocketProducer:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logging.info("Closing connection...")
+            logger.info("Closing connection...")
             self.ws.close()
             self.producer.flush()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logger.info("Starting application...")
     try:
         producer = CoinbaseWebSocketProducer()
         producer.run()
     except Exception as e:
         logger.exception("Fatal error occures")
-        raise
+        raise 
