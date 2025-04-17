@@ -1,6 +1,7 @@
 GRAFANA=docker compose -f docker/grafana-compose.yml
 COMPOSE=docker compose -f docker/docker-compose.yml
 CONSUMER=docker compose -f docker/consumer-compose.yml
+NETWORK_NAME=coinbase-network
 
 # Environment setup
 .PHONY: venv
@@ -11,6 +12,25 @@ venv:
 .PHONY: install
 install:
 	pip install -r requirements.txt
+
+# Network management
+.PHONY: network-create
+network-create:
+	@if [ -z "$$(docker network ls -q -f name=${NETWORK_NAME})" ]; then \
+		docker network create ${NETWORK_NAME}; \
+		echo "Network ${NETWORK_NAME} created"; \
+	else \
+		echo "Network ${NETWORK_NAME} already exists"; \
+	fi
+
+.PHONY: network-remove
+network-remove:
+	@if [ -n "$$(docker network ls -q -f name=${NETWORK_NAME})" ]; then \
+		docker network rm ${NETWORK_NAME}; \
+		echo "Network ${NETWORK_NAME} removed"; \
+	else \
+		echo "Network ${NETWORK_NAME} does not exist"; \
+	fi
 
 # Data pipeline
 .PHONY: produce
@@ -30,12 +50,12 @@ consume-docker-down:
 	${CONSUMER} down consumer
 
 # Infrastructure
-.PHONY: redpanda-up
-redpanda-up:
+.PHONY: infra-up
+infra-up: network-create
 	${COMPOSE} up -d
 
-.PHONY: redpanda-down
-redpanda-down:
+.PHONY: infra-down
+infra-down:
 	${COMPOSE} down
 
 .PHONY: grafana-build
@@ -57,20 +77,16 @@ init-db:
 
 # Utility commands
 .PHONY: up-all
-up-all: redpanda-up grafana-up
+up-all: infra-up grafana-up
 
 .PHONY: down-all
-down-all: redpanda-down grafana-down
-
-.PHONY: logs
-logs:
-	${COMPOSE} logs -f
-
-.PHONY: grafana-logs
-grafana-logs:
-	${GRAFANA} logs -f
+down-all: infra-down grafana-down
 
 # Cleanup
 .PHONY: clean
 clean: down-all
 	@echo "Stopped all services"
+
+.PHONY: kill
+kill: clean network-remove
+	docker volume prune -f 

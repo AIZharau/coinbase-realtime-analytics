@@ -4,7 +4,7 @@ services:
   consumer:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.consumer
+      dockerfile: docker/consumer/Dockerfile
     depends_on:
       redpanda:
         condition: service_healthy

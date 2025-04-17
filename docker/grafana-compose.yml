@@ -9,9 +9,20 @@ services:
       - "3000:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
+      - grafana-plugins:/var/lib/grafana-plugins
       - ../dashboards/grafana:/etc/grafana/provisioning/dashboards:ro
     environment:
+      GF_PATHS_PLUGINS: /var/lib/grafana-plugins
       GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "true"
       GF_SECURITY_ADMIN_PASSWORD: "admin"
+    networks:
+      - coinbase-network
+
+networks:
+  coinbase-network:
+    external: true
+    name: coinbase-network
+
 volumes:
   grafana-storage:
+  grafana-plugins:

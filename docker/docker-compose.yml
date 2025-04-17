@@ -22,6 +22,8 @@ services:
       - --memory 1G
       - --mode dev-container
       - --default-log-level=warn
+    networks:
+      - coinbase-network
     healthcheck:
       test: ["CMD", "rpk", "cluster", "health"]
       interval: 10s
@@ -41,6 +43,8 @@ services:
     environment:
       KAFKA_BROKERS: "redpanda:9092"
       CONFIG_FILEPATH: "/etc/redpanda-console/config.yaml"
+    networks:
+      - coinbase-network
 
   clickhouse:
     image: clickhouse/clickhouse-server:25.1
@@ -56,13 +60,21 @@ services:
       - CLICKHOUSE_DB=default
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=clickhouse_password
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - coinbase-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/ping"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+networks:
+  coinbase-network:
+    external: true
+    name: coinbase-network
 
 volumes:
   redpanda-data:

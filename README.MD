@@ -27,9 +27,6 @@ Follow the [Quick Start Guide](docs/quick_start.md) Guide for:
 ```bash
 # Start core services (see docker/README.md)
 make infra-up
-
-# Ingest sample data
-make test-stream
 ```
 
 3. Monitoring

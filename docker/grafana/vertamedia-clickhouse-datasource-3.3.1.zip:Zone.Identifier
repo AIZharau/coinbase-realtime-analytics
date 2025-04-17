@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://github.com/Altinity/clickhouse-grafana/releases
+HostUrl=https://objects.githubusercontent.com/github-production-release-asset-2e65be/77918702/db66bf50-5324-48d5-9ef1-6b47c123a084?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20250416%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250416T204927Z&X-Amz-Expires=300&X-Amz-Signature=faeaf351d17072edd1f83a53f15d63bf5f8164e4369d67a21b4e3c5035fa32af&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dvertamedia-clickhouse-datasource-3.3.1.zip&response-content-type=application%2Foctet-stream

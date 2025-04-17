@@ -24,6 +24,9 @@ make up-all
 
 ### Option B: Start services individually:
 ```bash
+# Build network
+make network-create
+
 # Start Redpanda (Kafka-compatible message broker)
 make redpanda-up
 
@@ -76,15 +79,6 @@ make grafana-down
 make consume-docker-down
 ```
 
-### Logs Monitoring:
-```bash
-# View Redpanda logs
-make logs
-
-# View Grafana logs
-make grafana-logs
-```
-
 ### Maintenance:
 ```bash
 # Rebuild Grafana containers
@@ -92,6 +86,9 @@ make grafana-build
 
 # Clean up everything
 make clean
+
+# Release all resources
+make kill
 ```
 
 ## Troubleshooting
