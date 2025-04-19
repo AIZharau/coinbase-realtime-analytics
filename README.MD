@@ -14,10 +14,10 @@
 - [☁️ Cloud Deployment](terraform/README.md) - Terraform infrastructure
 
 ## Current Architecture
-![Pipeline Diagram](https://github.com/AIZharau/coinbase-realtime-analytics/blob/main/docs/images/pipeline.png)  
-*Current architecture overview*
-
 Lightweight pipeline for processing Coinbase market data with clear upgrade paths and workflow orchestration.
+![Pipeline Diagram](https://github.com/AIZharau/coinbase-realtime-analytics/blob/main/docs/images/pipeline.png)  
+
+[Full architecture overview](docs/architecture.md) 
 
 ## Getting Started
 

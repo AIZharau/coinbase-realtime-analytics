@@ -3,6 +3,10 @@
 This directory contains Terraform configurations to deploy the Coinbase Real-Time Analytics pipeline infrastructure to Yandex Cloud.
 
 ## Prerequisites
+Yandex cloud
+Set Yandex cloud account and get 4000 rub grant: https://cloud.yandex.com/en/docs/billing/quickstart/
+
+Please read this instruction: https://cloud.yandex.com/en/docs/tutorials/infrastructure-management/terraform-state-storage
 
 - Terraform installed (version >= 1.0.0)
 - Yandex Cloud CLI installed and configured

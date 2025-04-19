@@ -17,7 +17,7 @@ variable "service_account_key_file" {
 variable "zone" {
   description = "Yandex Cloud Zone"
   type        = string
-  default     = "ru-central1-a"
+  default     = "ru-central1-b"
 }
 
 variable "clickhouse_user" {
