@@ -19,6 +19,24 @@ Lightweight pipeline for processing Coinbase market data with clear upgrade path
 
 [Full architecture overview](docs/architecture.md) 
 
+---
+
+## Problem Description
+### Problem
+The cryptocurrency market operates 24/7 with high volatility and rapid price movements, making it challenging for traders, analysts, and investors to monitor market conditions and make informed decisions. Traditional methods of manually checking prices or using basic charting tools create significant limitations:
+- **Delayed Information Access**: Market participants often rely on refreshing browser tabs or using intermittent price checks, resulting in critical delays when market conditions change rapidly.
+- **Lack of Analytical Depth**: Simple price checking doesn't provide the analytical capabilities needed for detecting patterns, anomalies, or trading opportunities across multiple cryptocurrencies simultaneously.
+- **Operational Complexity**: Without proper orchestration and management, maintaining continuous monitoring systems becomes error-prone and resource-intensive.
+
+### Project Goal
+To build an end-to-end real-time analytics platform that captures, processes, stores, and visualizes cryptocurrency market data from Coinbase, enabling traders and analysts to monitor market conditions, identify trends, and develop trading strategies with minimal latency.
+### Solution
+This project implements a comprehensive cloud-based pipeline using modern data engineering principles.
+
+The resulting platform eliminates manual data checking, provides millisecond-level visibility into market movements, and creates a foundation for advanced analytics, algorithmic trading strategies, and comprehensive market monitoring with minimal operational overhead.
+
+---
+
 ## Getting Started
 
 1. **Initial Setup**
