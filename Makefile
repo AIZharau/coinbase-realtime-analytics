@@ -4,65 +4,41 @@ CONSUMER=docker compose -f docker/consumer-compose.yml
 PRODUCER=docker compose -f docker/producer-compose.yml
 AIRFLOW=docker compose -f docker/airflow/docker-compose.yaml
 NETWORK_NAME=coinbase-network
-TF_VERSION=1.6.5
+LOCAL_BIN = .local/bin
+TF_VERSION=1.5.7
 YC_VERSION=latest
 
 # Environment setup
 .PHONY: venv
 venv:
-	python -m venv .venv
+	python3 -m venv .venv
 	@echo "Run 'source .venv/bin/activate' (Linux/Mac) or '.venv\\Scripts\\activate' (Windows)"
 
 .PHONY: install
 install:
 	pip install -r requirements.txt
 
-.PHONY: install-terraform
-install-terraform:
-	@echo "Installing Terraform ${TF_VERSION}..."
-	@if [ -f /etc/os-release ]; then \
-		. /etc/os-release; \
-		case "$$ID" in \
-			ubuntu|debian) \
-				sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl; \
-				curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -; \
-				sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $$(lsb_release -cs) main"; \
-				sudo apt-get update && sudo apt-get install -y terraform=${TF_VERSION}; \
-				echo "Terraform installed successfully." ;; \
-			centos|rhel|fedora) \
-				sudo yum install -y yum-utils; \
-				sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo; \
-				sudo yum -y install terraform-${TF_VERSION}; \
-				echo "Terraform installed successfully." ;; \
-			*) \
-				echo "Unsupported OS. Please install Terraform manually from https://developer.hashicorp.com/terraform/install" ;; \
-		esac \
-	else \
-		echo "Cannot detect OS. Please install Terraform manually from https://developer.hashicorp.com/terraform/install"; \
-	fi
-	@echo "Verifying Terraform installation..."
-	@terraform version
-
 .PHONY: install-yc
 install-yc:
-	@echo "Installing Yandex Cloud CLI..."
-	@if [ -f /etc/os-release ]; then \
-		. /etc/os-release; \
-		case "$$ID" in \
-			ubuntu|debian) \
-				curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash; \
-				echo "Yandex Cloud CLI installed successfully." ;; \
-			centos|rhel|fedora) \
-				curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash; \
-				echo "Yandex Cloud CLI installed successfully." ;; \
-			*) \
-				echo "Unsupported OS. Please install Yandex Cloud CLI manually from https://cloud.yandex.com/docs/cli/quickstart" ;; \
-		esac \
-	else \
-		echo "Cannot detect OS. Please install Yandex Cloud CLI manually from https://cloud.yandex.com/docs/cli/quickstart"; \
-	fi
-	@echo "Verifying Yandex Cloud CLI installation..."
-	@yc version || echo "Please restart your shell or run 'source ~/.bashrc' to use yc command"
+	@echo "Installing YC CLI to $(LOCAL_BIN)..."
+	@mkdir -p $(LOCAL_BIN)
+	@curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | \
+		bash -s -- --install-dir $(LOCAL_BIN) --no-add-to-path
+	@mv nstall-dir/* .local
+	@rm -rf nstall-dir
+	@echo "Run: export PATH=\"$$PWD/$(LOCAL_BIN):\$$PATH\""
+
+
+.PHONY: install-terraform
+install-terraform:
+	@echo "Installing Terraform ${TF_VERSION} to ${LOCAL_BIN}..."
+	@mkdir -p ${LOCAL_BIN}
+	@wget https://hashicorp-releases.yandexcloud.net/terraform/${TF_VERSION}/terraform_${TF_VERSION}_darwin_arm64.zip -O ${LOCAL_BIN}/terraform.zip
+	@unzip -o ${LOCAL_BIN}/terraform.zip -d ${LOCAL_BIN}
+	@rm -f ${LOCAL_BIN}/terraform.zip
+	@chmod +x ${LOCAL_BIN}/terraform
+	@echo "Terraform installed. Add to PATH: export PATH=\"$$PWD/${LOCAL_BIN}:\$$PATH\""
+	@${LOCAL_BIN}/terraform version
 
 # Network management
 .PHONY: network-create
@@ -159,23 +135,27 @@ init-db:
 # Terraform operations
 .PHONY: tf-init
 tf-init:
-	cd terraform && terraform init
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" terraform -chdir=terraform init
 
 .PHONY: tf-plan
 tf-plan:
-	cd terraform && terraform plan
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" terraform -chdir=terraform plan
 
 .PHONY: tf-apply
 tf-apply:
-	cd terraform && terraform apply
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" terraform -chdir=terraform apply -auto-approve
 
 .PHONY: tf-destroy
 tf-destroy:
-	cd terraform && terraform destroy
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" terraform -chdir=terraform destroy -auto-approve
 
 .PHONY: tf-output
 tf-output:
-	cd terraform && terraform output
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" terraform -chdir=terraform output
+
+.PHONY: yc-init
+yc-init:
+	@PATH="$(shell pwd)/$(LOCAL_BIN):$$PATH" yc init
 
 .PHONY: infra-cloud-up
 infra-cloud-up: tf-init tf-apply

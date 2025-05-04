@@ -1,8 +1,10 @@
 resource "yandex_mdb_clickhouse_cluster" "coinbase_clickhouse" {
-  name               = "coinbase-clickhouse"
-  environment        = "PRODUCTION"
-  network_id         = yandex_vpc_network.coinbase_network.id
-  security_group_ids = [yandex_vpc_security_group.clickhouse_sg.id]
+  name                    = "coinbase-clickhouse"
+  environment             = "PRESTABLE"
+  network_id              = yandex_vpc_network.coinbase_network.id
+  security_group_ids      = [yandex_vpc_security_group.clickhouse_sg.id]
+  admin_password          = var.clickhouse_password
+  sql_database_management = false
   
   clickhouse {
     resources {

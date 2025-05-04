@@ -4,6 +4,10 @@ resource "yandex_storage_bucket" "coinbase_raw_data" {
   max_size   = 1073741824 # 1GB
   access_key = yandex_iam_service_account_static_access_key.sa_static_key.access_key
   secret_key = yandex_iam_service_account_static_access_key.sa_static_key.secret_key
+  depends_on = [
+    yandex_iam_service_account_static_access_key.sa_static_key,
+    yandex_resourcemanager_folder_iam_member.sa_storage_editor
+  ]
 
   lifecycle_rule {
     id      = "cleanup-old-data"

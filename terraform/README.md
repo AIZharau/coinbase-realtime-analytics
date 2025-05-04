@@ -47,18 +47,24 @@ The services on the VM are set up to automatically start on boot:
 curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
 
 # Login to Yandex Cloud
-yc login
+.local/bin/yc login
 
 # Create a service account
-yc iam service-account create --name terraform-account
+.local/bin/yc iam service-account create --name terraform-account
 
 # Grant necessary permissions
-yc resource-manager folder add-access-binding --name default \
+.local/bin/yc resource-manager folder add-access-binding <folder_id> \
   --service-account-name terraform-account \
-  --role editor
+  --role editor \
+  --subject serviceAccount:<terraform-account id>
+
+.local/bin/yc resource-manager folder add-access-binding <folder_id> \
+  --service-account-name terraform-account \
+  --role admin \
+  --subject serviceAccount:<terraform-account id>
 
 # Create and download service account key
-yc iam key create --service-account-name terraform-account \
+.local/bin/yc iam key create --service-account-name terraform-account \
   --output key.json
 ```
 
@@ -85,13 +91,13 @@ source .env
 
 ```bash
 # Initialize Terraform
-terraform init
+make tf-init
 
 # Plan the deployment to verify resources
-terraform plan
+make tf-plan
 
 # Apply the configuration
-terraform apply
+make tf-apply
 ```
 
 ### 4. Access Resources
@@ -112,7 +118,7 @@ ssh ubuntu@<vm_external_ip>
 To destroy all created resources:
 
 ```bash
-terraform destroy
+make tf-destroy
 ```
 
 ## Configuration Parameters

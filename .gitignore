@@ -15,6 +15,7 @@ pip-wheel-metadata/
 venv/
 .env/
 .venv/
+.local/
 
 # IDE
 .vscode/
@@ -60,6 +61,8 @@ redpanda/data/
 ### Terraform ###
 # For future use
 .terraform/
+plugin-cache/
+.terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
 
@@ -72,6 +75,7 @@ local_settings.*
 .env
 secrets.ini
 vault.token
+key.json
 
 ### Build artifacts ###
 *.war

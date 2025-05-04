@@ -16,13 +16,15 @@ resource "yandex_iam_service_account" "coinbase_sa" {
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "sa_storage_editor" {
-  folder_id = var.folder_id
-  role      = "storage.editor"
-  member    = "serviceAccount:${yandex_iam_service_account.coinbase_sa.id}"
+  folder_id  = var.folder_id
+  role       = "storage.editor"
+  member     = "serviceAccount:${yandex_iam_service_account.coinbase_sa.id}"
+  depends_on = [yandex_iam_service_account.coinbase_sa]
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "sa_compute_admin" {
   folder_id = var.folder_id
   role      = "compute.admin"
   member    = "serviceAccount:${yandex_iam_service_account.coinbase_sa.id}"
+  depends_on = [yandex_iam_service_account.coinbase_sa]
 } 
